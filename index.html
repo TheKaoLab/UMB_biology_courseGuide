@@ -94,12 +94,13 @@ h2{font-size:1.45rem;font-weight:700;margin:0;letter-spacing:-.015em}
 .cards{min-width:46rem;display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
 .card{min-width:0;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:4px 0}
 .row{display:grid;grid-template-columns:var(--cols);align-items:baseline}
-.row>div{padding:4px 10px;min-width:0}
+.row>div{padding:4px 10px;min-width:0;text-align:center}
+.row>div:first-child{text-align:left}
 .hrow{font-size:0.786rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
 .hrow>div{padding:26px 10px 4px;white-space:nowrap}
 .toolbar{padding-bottom:8px}
 .c{text-align:center}
-.num{text-align:right}
+.num{text-align:center}
 .c-name{font-weight:500}
 .c-type{color:var(--ink-2);white-space:nowrap}
 .c-code{font-family:var(--mono);font-size:0.857rem;color:var(--ink-2);white-space:nowrap}
@@ -182,7 +183,7 @@ footer p{margin:0 0 8px;max-width:60ch}
   .row.hrow{display:none}
   .card{padding:2px 0}
   .row{display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 10px;padding:7px 12px}
-  .row>div{padding:0}
+  .row>div{padding:0;text-align:left}
   .part+.part{border-top:1px solid var(--line-2)}
   .c-name{flex-basis:100%;font-weight:600;font-size:1.036rem}
   .c-name:empty{display:none}
