@@ -88,7 +88,7 @@ h2{font-size:1.45rem;font-weight:700;margin:0;letter-spacing:-.015em}
 .grp-title:first-child{margin-top:0}
 
 /* course cards share one column template so the columns line up across cards */
-#main,.toolbar{--nt:1;--cols:minmax(0,1fr) 3rem 7.4rem 6.6rem 5.4rem repeat(var(--nt),6rem) 4.7rem 7.2rem}
+#main,.toolbar{--nt:1;--cols:minmax(0,1fr) 3rem 7.4rem 6.6rem 5.4rem repeat(var(--nt),6rem) 4.7rem 8.4rem}
 .tablewrap{overflow-x:auto;margin-left:var(--indent,1.75rem)}
 #colhead{margin-left:var(--indent,1.75rem)}
 .cards{min-width:46rem;display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
@@ -117,10 +117,10 @@ h2{font-size:1.45rem;font-weight:700;margin:0;letter-spacing:-.015em}
 .part.dim .mwf,.part.dim .tth{color:var(--ink-3)}
 
 /* details trigger */
-.c-det{padding-left:6px!important;padding-right:6px!important;white-space:nowrap}
+.c-det{padding-left:6px!important;padding-right:6px!important;white-space:nowrap;display:grid;grid-template-columns:1fr 2.6rem;align-items:baseline}
+.c-det .nt{text-align:left;font-size:0.786rem;font-weight:600;color:var(--note)}
 .det-btn{font-size:0.929rem;color:var(--ink);background:none;border:0;border-radius:4px;padding:1px 4px;margin:-1px -4px;cursor:pointer;line-height:1.45;white-space:nowrap}
 .det-btn:hover,.det-btn[aria-expanded="true"]{background:var(--sunk)}
-.det-btn .nt{font-size:0.786rem;font-weight:600;color:var(--note);margin-left:5px}
 .cl{font:inherit;color:var(--link);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--link) 35%,transparent);text-underline-offset:2px}
 .cl:hover{text-decoration-color:currentColor}
 
@@ -194,7 +194,7 @@ footer p{margin:0 0 8px;max-width:60ch}
   .c-term{order:5} .c-term::before{content:attr(data-term) " ";color:var(--ink-3)}
   .c-term.blank{display:none}
 
-  .c-det{order:6;margin-left:auto;padding:0!important}
+  .c-det{order:6;margin-left:auto;padding:0!important;display:flex;gap:6px}
   .det-btn{margin:0}
   footer{grid-template-columns:1fr}
   section.block{scroll-margin-top:120px}
@@ -363,7 +363,7 @@ function rowHTML(c, p, j){
     <div class="c-code">${esc(p.code)}</div>
     <div class="c-cr num" data-unit="${p.cr === "1" ? " credit" : " credits"}">${esc(p.cr)}</div>${terms}
     <div class="c-mark c${p.health ? " on" : ""}" data-label="Health-related">${p.health ? `<span title="Relevant to a health-related career">${ICON.health}</span>` : ""}</div>
-    <div class="c-det"><button type="button" class="det-btn" data-p="${p.id}" aria-haspopup="dialog" aria-expanded="false" aria-label="Details for ${esc(p.code)}">Details${note ? '<span class="nt" title="Has a note">Note</span>' : ""}</button></div></div>`;
+    <div class="c-det"><button type="button" class="det-btn" data-p="${p.id}" aria-haspopup="dialog" aria-expanded="false" aria-label="Details for ${esc(p.code)}">Details</button><span class="nt">${note ? '<span title="Has a note">Note</span>' : ""}</span></div></div>`;
 }
 
 /* ---- popover ---- */
