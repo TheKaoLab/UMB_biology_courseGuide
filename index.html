@@ -6,6 +6,7 @@
 <style>[hidden]{display:none!important} html,body{margin:0} :root{color-scheme:light dark}</style>
 <title>Biology Major Course Guide</title>
 <meta name="description" content="Unofficial biology major course guide for UMass Boston, updated to include Spring 2027.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%231F6FB2%22/%3E%3Cg fill=%22none%22 stroke=%22%23fff%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 6h8M14 6v8.4L7.2 25.2A1.8 1.8 0 0 0 8.8 28h14.4a1.8 1.8 0 0 0 1.6-2.8L18 14.4V6%22/%3E%3Cpath d=%22M10.6 21h10.8%22/%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap">
@@ -199,7 +200,7 @@ h2{font-size:1.45rem;font-weight:700;margin:0;letter-spacing:-.015em}
 #tip .grid{display:grid;grid-template-columns:max-content max-content minmax(0,1fr) max-content;gap:1px 10px;align-items:baseline}
 #tip .th{grid-column:1/-1;font-size:0.714rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);margin:7px 0 2px}
 #tip .th:first-child{margin-top:0}
-#tip .d{font-family:var(--mono);font-weight:600;white-space:nowrap}
+#tip .d{font-family:var(--mono);white-space:nowrap}
 #tip .m{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
 #tip .w{color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #tip .x{color:var(--ink-3);font-size:0.786rem;white-space:nowrap;text-align:right}
@@ -408,8 +409,20 @@ function linkCodes(text){
 }
 const DAY = {"1":["mwf","MWF","Lecture on Mon, Wed and/or Fri"],"2":["tth","TTh","Lecture on Tue and/or Thu"],"3":["","MWF/TTh","Sections offered on both schedules"],"0":["","offered","No specific lecture days"],
              "S":["summer","offered","Offered in the summer session"],"B":["summer","campus","Summer, UMass Boston campus"],"R":["summer","remote","Summer, can be taken remotely"],"N":["summer","Nantucket","Summer, Nantucket field station"]};
+/* Where the catalog gives the lecture sections, show their actual day pattern (MW, TTh, …) instead of the guide's 1/2/3 code. */
+function lectureDays(p, ti){
+  const secs = p.sections && p.sections[ti]; if (!secs) return null;
+  const pats = [...new Set(secs.filter(s => s.k === "lec").map(s => s.m.split(" ")[0]).filter(d => /^(?:M|Th|T|W|F|Sa|Su)+$/.test(d)))];
+  if (!pats.length) return null;
+  const isT = d => /T/.test(d);
+  pats.sort((a, b) => isT(a) - isT(b));
+  const cls = pats.every(d => !isT(d)) ? "mwf" : pats.every(isT) ? "tth" : "";
+  return {lab: pats.join("/"), cls};
+}
 function dayMark(code, p, ti){
   const has = p.sections && p.sections[ti] && p.sections[ti].length;
+  const real = /^[123]$/.test(code) ? lectureDays(p, ti) : null;
+  if (real) return `<button type="button" class="dm ${real.cls}" data-p="${p.id}" data-ti="${ti}" aria-haspopup="true" aria-expanded="false" aria-label="${real.lab}: show meeting times">${real.lab}</button>`;
   return [...code].filter(ch => DAY[ch]).map(ch => { const [cls,lab,tip] = DAY[ch];
     return has ? `<button type="button" class="dm ${cls}" data-p="${p.id}" data-ti="${ti}" aria-haspopup="true" aria-expanded="false" aria-label="${lab}: show meeting times">${lab}</button>`
                : `<span class="${cls}" title="${tip}">${lab}</span>`; }).join(" ");
@@ -551,7 +564,8 @@ function tipHTML(p, ti){
     rows.forEach(s => {
       const sp = s.m.indexOf(" "), days = sp > 0 ? s.m.slice(0, sp) : s.m, time = (sp > 0 ? s.m.slice(sp + 1) : "").replace(/^(\d):/, "\u2007$1:");
       const extra = [s.n > 1 ? `×${s.n}` : "", s.full ? "waitlist/closed" : ""].filter(Boolean).join(" · ");
-      h += `<span class="d">${esc(days)}</span><span class="m">${esc(time)}</span><span class="w">${esc(s.who.join(", "))}</span><span class="x">${esc(extra)}</span>`;
+      const dc = !/^(?:M|Th|T|W|F|Sa|Su)+$/.test(days) ? "" : /T/.test(days) ? "tth" : "mwf";
+      h += `<span class="d ${dc}">${esc(days)}</span><span class="m">${esc(time)}</span><span class="w">${esc(s.who.join(", "))}</span><span class="x">${esc(extra)}</span>`;
     });
   });
   h += `</div><div class="src">${t.name} ${t.year} · from the course catalog</div>`;
