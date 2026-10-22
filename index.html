@@ -97,7 +97,9 @@ h1{font-size:2rem;font-weight:700;line-height:1.1;margin:0 0 4px;letter-spacing:
 .menu .opt[aria-pressed="false"]{color:var(--ink-2)}
 .menu .hint{font-size:0.786rem;color:var(--ink-3);padding-top:5px;border-top:1px solid var(--line-2);margin-top:3px;white-space:normal;max-width:16rem}
 .menu .hint .linkbtn{font-size:0.786rem}
-.history{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin:14px 0 0 var(--indent,1.75rem);display:grid;gap:6px}
+.history{margin:14px 0 0 var(--indent,1.75rem);display:grid;gap:8px}
+.history .htop{display:flex;align-items:baseline;gap:12px;padding:0 2px}
+.history .hcard{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 14px;display:grid;gap:6px}
 .history .hh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
 .history .hh b{font-size:1.036rem}
 .history .hh .code{font-family:var(--mono);font-size:0.857rem;color:var(--ink-2)}
@@ -201,6 +203,12 @@ h2{font-size:1.45rem;font-weight:700;margin:0;letter-spacing:-.015em}
 #tip .ln .w{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis}
 #tip .ln .x{color:var(--ink-3);font-size:0.786rem}
 #tip .src{margin-top:6px;font-size:0.714rem;color:var(--ink-3)}
+
+/* ---------- small hover hints on icons ---------- */
+.hint{cursor:default;border-radius:3px}
+.hint:hover,.hint:focus-visible{color:var(--ink)}
+#hint{position:fixed;z-index:21;max-width:18rem;background:var(--ink);color:var(--bg);border-radius:6px;padding:5px 9px;font-size:0.857rem;line-height:1.4;box-shadow:var(--shadow);pointer-events:none}
+#hint::before{content:"";position:absolute;left:var(--ax,12px);top:-5px;border:5px solid transparent;border-top:0;border-bottom-color:var(--ink)}
 
 /* ---------- footer ---------- */
 .emptystate{padding:48px 0;text-align:center;color:var(--ink-2)}
@@ -322,6 +330,7 @@ footer p{margin:0 0 8px;max-width:60ch}
 
 <div id="pop" role="dialog" aria-modal="false" hidden></div>
 <div id="tip" role="tooltip" hidden></div>
+<div id="hint" role="tooltip" hidden></div>
 
 <script>
 /* ===== Guide data =====
@@ -449,12 +458,12 @@ function rowHTML(c, p, j){
   const fnd = foundations(c, p);
   return `<div class="row part" data-p="${p.id}" id="row-${norm(p.code)}">
     <div class="c-name">${j === 0 ? esc(c.name) : ""}</div>
-    <div class="c-mark c${p.lab ? " on" : ""}" data-col="lab" data-label="Advanced lab">${p.lab ? `<span title="Advanced lab course">${ICON.lab}</span>` : ""}</div>
+    <div class="c-mark c${p.lab ? " on" : ""}" data-col="lab" data-label="Advanced lab">${p.lab ? `<span class="hint" tabindex="0" data-tip="Counts as an advanced lab course">${ICON.lab}</span>` : ""}</div>
     <div class="c-type" data-col="type">${esc(p.type || "")}</div>
     <div class="c-code" data-col="code">${esc(p.code)}</div>
     <div class="c-cr num" data-col="cr" data-unit="${p.cr === "1" ? " credit" : " credits"}">${esc(p.cr)}</div>${terms}
-    <div class="c-mark c${p.health ? " on" : ""}" data-col="health" data-label="Health-related">${p.health ? `<span title="Relevant to a health-related career">${ICON.health}</span>` : ""}</div>
-    <div class="c-pre" data-col="pre">${["cell","gen","pop"].map(k => `<span class="ps">${fnd && fnd[k] ? `<span title="${FOUND_LABEL[k]}">${ICON[k]}</span>` : ""}</span>`).join("")}</div>
+    <div class="c-mark c${p.health ? " on" : ""}" data-col="health" data-label="Health-related">${p.health ? `<span class="hint" tabindex="0" data-tip="Relevant to a health-related career (Pre-medical &amp; Allied Health Program)">${ICON.health}</span>` : ""}</div>
+    <div class="c-pre" data-col="pre">${["cell","gen","pop"].map(k => `<span class="ps">${fnd && fnd[k] ? `<span class="hint" tabindex="0" data-tip="${FOUND_LABEL[k]} as a pre-requisite">${ICON[k]}</span>` : ""}</span>`).join("")}</div>
     <div class="c-det"><button type="button" class="det-btn" data-p="${p.id}" aria-haspopup="dialog" aria-expanded="false" aria-label="Details for ${esc(p.code)}">Details</button><span class="nt">${note ? '<span title="Has a note">Note</span>' : ""}</span></div></div>`;
 }
 
@@ -588,6 +597,24 @@ document.addEventListener("focusin", e => { const b = e.target.closest && e.targ
 addEventListener("scroll", () => { if (tipBtn) tipPinned ? placeTip() : closeTip(); }, {passive:true});
 addEventListener("resize", placeTip);
 
+/* ---- icon hints ---- */
+const hint = $("#hint");
+let hintEl = null;
+function showHint(el){
+  hintEl = el; hint.textContent = el.dataset.tip; hint.hidden = false;
+  const r = el.getBoundingClientRect(), w = hint.offsetWidth, m = 8;
+  let left = Math.min(Math.max(m, r.left + r.width / 2 - 14), innerWidth - w - m);
+  hint.style.left = left + "px"; hint.style.top = (r.bottom + 6) + "px";
+  hint.style.setProperty("--ax", Math.max(8, r.left + r.width / 2 - left - 5) + "px");
+}
+function hideHint(){ hintEl = null; hint.hidden = true; }
+document.addEventListener("mouseover", e => { const el = e.target.closest(".hint"); if (el && el !== hintEl) showHint(el); });
+document.addEventListener("mouseout", e => { const el = e.target.closest(".hint"); if (el && !(e.relatedTarget && el.contains(e.relatedTarget))) hideHint(); });
+document.addEventListener("focusin", e => { const el = e.target.closest && e.target.closest(".hint"); if (el) showHint(el); });
+document.addEventListener("focusout", e => { if (e.target.closest && e.target.closest(".hint")) hideHint(); });
+document.addEventListener("click", e => { const el = e.target.closest(".hint"); if (el && !canHover) { hintEl === el ? hideHint() : showHint(el); } else if (hintEl) hideHint(); }, true);
+addEventListener("scroll", hideHint, {passive:true});
+
 /* ---- filters ---- */
 const state = {sel:new Set([DEFAULT_TERM]), health:false, lab:false, cols:new Set(COLS.map(c => c.id))};
 try { const s = JSON.parse(localStorage.getItem("bioGuideCols") || "null"); if (Array.isArray(s)) state.cols = new Set(COLS.map(c => c.id).filter(id => s.includes(id))); } catch(_) {}
@@ -637,7 +664,7 @@ function apply(){
 }
 function clearFilters(){
   state.sel = new Set([DEFAULT_TERM]); state.health = state.lab = false;
-  $("#lookup").value = ""; showHistory("");
+  $("#lookup").value = ""; histSel.length = 0; renderHistory();
   $("#fHealth").setAttribute("aria-pressed","false"); $("#fLab").setAttribute("aria-pressed","false");
   apply();
 }
@@ -691,27 +718,42 @@ function academicYears(){
   return Object.keys(by).sort().map(y => ({label: `${y}–${String(+y + 1).slice(2)}`, terms: by[y]}));
 }
 const MARK = {"1":"MWF","2":"TTh","3":"MWF/TTh","0":"offered","S":"offered","B":"campus","R":"remote","N":"Nantucket"};
-function showHistory(cid){
-  const box = $("#history");
-  if (cid === "") { box.hidden = true; box.innerHTML = ""; return; }
-  const c = courses[+cid];
+const histSel = [];                       /* courses currently shown in the history panel, in the order added */
+function historyCard(c){
   const lead = c.parts.filter(p => !labRow(p));
   const n = TERMS.filter(t => offered(c, t.id)).length;
-  box.innerHTML = `<div class="hh"><b>${esc(c.name)}</b><span class="code">${esc(c.parts.map(p => p.code).join(" / "))}</span>
+  return `<div class="hcard" data-c="${c.id}"><div class="hh"><b>${esc(c.name)}</b><span class="code">${esc(c.parts.map(p => p.code).join(" / "))}</span>
       <span class="pt">taught in ${n} of ${TERMS.length} semesters on record</span>
       <button type="button" class="linkbtn" data-jump="${norm(c.parts[0].code)}">Go to course</button>
-      <button type="button" class="xbtn" id="histClose" aria-label="Close course history" title="Close"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
+      <button type="button" class="xbtn" data-remove="${c.id}" aria-label="Remove ${esc(c.name)}" title="Remove"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
     <div class="ay"><div class="ayh"></div>${SEASONS.map(s => `<div class="ayh">${s}</div>`).join("")}
     ${academicYears().map(ay => `<div class="ayl">${ay.label}</div>` + SEASONS.map(s => {
       const t = ay.terms[s];
       if (!t) return `<div class="sem nodata"><span class="v">no data</span></div>`;
       const marks = lead.map(p => p.off[t.id]).filter(Boolean);
       const v = marks.length ? [...new Set(marks.flatMap(m => [...m].map(ch => MARK[ch] || ch)))].join(", ") : "—";
-      return `<div class="sem ${marks.length ? "on" : "off"}" title="${t.name} ${t.year}"><span class="v">${esc(v)}</span></div>`; }).join("")).join("")}</div>`;
+      return `<div class="sem ${marks.length ? "on" : "off"}" title="${t.name} ${t.year}"><span class="v">${esc(v)}</span></div>`; }).join("")).join("")}</div></div>`;
+}
+function renderHistory(){
+  const box = $("#history");
+  if (!histSel.length) { box.hidden = true; box.innerHTML = ""; return; }
+  box.innerHTML = `<div class="htop"><span class="pt">Course history · ${histSel.length} course${histSel.length > 1 ? "s" : ""}</span><button type="button" class="linkbtn" id="histClear">Clear all</button></div>` +
+    histSel.map(id => historyCard(courses[id])).join("");
   box.hidden = false;
 }
+function showHistory(cid){
+  if (cid === "") return;
+  const id = +cid;
+  if (!histSel.includes(id)) histSel.push(id);
+  $("#lookup").value = "";
+  renderHistory();
+}
 $("#lookup").addEventListener("change", e => showHistory(e.target.value));
-$("#history").addEventListener("click", e => { if (e.target.closest("#histClose")) { $("#lookup").value = ""; showHistory(""); } });
+$("#history").addEventListener("click", e => {
+  const r = e.target.closest("[data-remove]");
+  if (r) { histSel.splice(histSel.indexOf(+r.dataset.remove), 1); renderHistory(); return; }
+  if (e.target.closest("#histClear")) { histSel.length = 0; renderHistory(); }
+});
 
 [["#fHealth","health"],["#fLab","lab"]].forEach(([id,k]) => $(id).addEventListener("click", e => {
   state[k] = !state[k]; e.currentTarget.setAttribute("aria-pressed", state[k]); apply();
