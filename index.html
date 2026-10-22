@@ -6,7 +6,7 @@
 <style>[hidden]{display:none!important} html,body{margin:0} :root{color-scheme:light dark}</style>
 <title>Biology Major Course Guide</title>
 <meta name="description" content="Unofficial biology major course guide for UMass Boston, updated to include Spring 2027.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%231F6FB2%22/%3E%3Cg fill=%22none%22 stroke=%22%23fff%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M12 6h8M14 6v8.4L7.2 25.2A1.8 1.8 0 0 0 8.8 28h14.4a1.8 1.8 0 0 0 1.6-2.8L18 14.4V6%22/%3E%3Cpath d=%22M10.6 21h10.8%22/%3E%3C/g%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%231F6FB2%22/%3E%3Cg fill=%22none%22 stroke=%22%23fff%22 stroke-width=%222.2%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M10 4c0 8 12 8 12 12s-12 4-12 12M22 4c0 8-12 8-12 12s12 4 12 12%22/%3E%3Cpath d=%22M12.4 9.2h7.2M12.4 22.8h7.2%22/%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap">
@@ -277,6 +277,7 @@ footer p{margin:0 0 8px;max-width:60ch}
           <div class="menu-wrap"><button type="button" id="archBtn" aria-haspopup="true" aria-expanded="false" title="Add past semesters">Archive ▾</button>
             <div class="menu" id="termMenu" hidden></div></div>
         </div>
+        <button class="toggle" id="fAdv" aria-pressed="false" type="button" title="Show only the advanced courses">Advanced courses</button>
         <button class="toggle" id="fHealth" aria-pressed="false" type="button">Health-related</button>
         <button class="toggle" id="fLab" aria-pressed="false" type="button">Advanced lab</button>
         <div class="seg sizes" id="sizeSeg" role="group" aria-label="Text size" title="Text size">
@@ -634,7 +635,7 @@ document.addEventListener("click", e => { const el = e.target.closest(".hint"); 
 addEventListener("scroll", hideHint, {passive:true});
 
 /* ---- filters ---- */
-const state = {sel:new Set([DEFAULT_TERM]), health:false, lab:false, cols:new Set(COLS.map(c => c.id))};
+const state = {sel:new Set([DEFAULT_TERM]), adv:false, health:false, lab:false, cols:new Set(COLS.map(c => c.id))};
 try { const s = JSON.parse(localStorage.getItem("bioGuideCols") || "null"); if (Array.isArray(s)) state.cols = new Set(COLS.map(c => c.id).filter(id => s.includes(id))); } catch(_) {}
 
 function apply(){
@@ -643,7 +644,7 @@ function apply(){
     const vt = visibleTerms();
     const termOK = vt.some(t => offered(c, t.id));
     const partOK = p => (!state.health || p.health) && (!state.lab || p.lab);
-    const vis = termOK && c.parts.some(partOK);
+    const vis = termOK && (!state.adv || c.sec.id === "adv") && c.parts.some(partOK);
     const tb = document.querySelector(`.card[data-c="${c.id}"]`);
     tb.hidden = !vis;
     if (vis) shown++;
@@ -673,7 +674,7 @@ function apply(){
   $("#termSeg button[data-term]").setAttribute("aria-pressed", onlyCurrent);
   $("#archBtn").setAttribute("aria-pressed", !onlyCurrent);
   document.querySelectorAll("#termMenu .opt").forEach(b => b.setAttribute("aria-pressed", state.sel.has(b.dataset.term)));
-  const filtered = !onlyCurrent || state.health || state.lab;
+  const filtered = !onlyCurrent || state.adv || state.health || state.lab;
   $("#count").textContent = `${shown} of ${courses.length} courses`;
   $("#clear").hidden = !filtered;
   $("#empty").hidden = shown > 0;
@@ -681,9 +682,9 @@ function apply(){
   if (tipBtn) closeTip();
 }
 function clearFilters(){
-  state.sel = new Set([DEFAULT_TERM]); state.health = state.lab = false;
+  state.sel = new Set([DEFAULT_TERM]); state.adv = state.health = state.lab = false;
   $("#lookup").value = ""; histSel.length = 0; renderHistory();
-  $("#fHealth").setAttribute("aria-pressed","false"); $("#fLab").setAttribute("aria-pressed","false");
+  $("#fAdv").setAttribute("aria-pressed","false"); $("#fHealth").setAttribute("aria-pressed","false"); $("#fLab").setAttribute("aria-pressed","false");
   apply();
 }
 function jumpTo(codeN){
@@ -693,7 +694,7 @@ function jumpTo(codeN){
   if (row.closest(".card").hidden || row.closest("section").hidden) {
     const c = parts.find(q => norm(q.code) === codeN).course;
     if (!visibleTerms().some(t => offered(c, t.id))) MENU_TERMS.forEach(t => { if (offered(c, t.id)) state.sel.add(t.id); });
-    state.health = state.lab = false; $("#fHealth").setAttribute("aria-pressed","false"); $("#fLab").setAttribute("aria-pressed","false"); apply(); }
+    state.adv = state.health = state.lab = false; $("#fAdv").setAttribute("aria-pressed","false"); $("#fHealth").setAttribute("aria-pressed","false"); $("#fLab").setAttribute("aria-pressed","false"); apply(); }
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   row.scrollIntoView({behavior: reduce ? "auto" : "smooth", block:"center"});
   row.classList.remove("flash"); void row.offsetWidth; row.classList.add("flash");
@@ -771,7 +772,7 @@ $("#history").addEventListener("click", e => {
   if (e.target.closest("#histClear")) { histSel.length = 0; renderHistory(); }
 });
 
-[["#fHealth","health"],["#fLab","lab"]].forEach(([id,k]) => $(id).addEventListener("click", e => {
+[["#fAdv","adv"],["#fHealth","health"],["#fLab","lab"]].forEach(([id,k]) => $(id).addEventListener("click", e => {
   state[k] = !state[k]; e.currentTarget.setAttribute("aria-pressed", state[k]); apply();
 }));
 function setSize(fs){
